@@ -1,0 +1,73 @@
+attribute vec3 Position;
+
+varying vec4 FragColor;
+
+uniform mat4 gWorld;
+uniform mat4 trans1;
+uniform mat4 scale1;
+uniform mat4 theta;
+uniform mat4 worldTheta;
+uniform float flag1;
+
+void main()
+{
+	vec4 normal;
+
+	if(flag1==1.0 || flag1==2.0 || flag1==5.0 || flag1==8.0)	
+		normal = theta * vec4(Position.xy, 0.0, 0.0);
+	else if(flag1==3.0 || flag1==3.5)
+		normal = vec4(Position, 0.0);
+	else if(flag1==4.0 || flag1==6.0 || flag1==7.0)
+		normal = vec4(0.0, 0.0, -1.0, 0.0);
+
+	if(flag1==4.0 || flag1==6.0)
+	    gl_Position = trans1 * vec4(Position.xy, 0.0, 1.0);		
+	else if(flag1==5.0 || flag1==8.0)
+	    gl_Position = trans1 * theta * scale1 * vec4(Position.xy, Position.z+1.0, 1.0);
+	else if(flag1==7.0)
+		gl_Position = vec4(Position, 1.0);
+	else
+	    gl_Position = trans1 * theta * scale1 * vec4(Position, 1.0);
+
+
+	//Light calculations
+	vec3 LightPosition = vec3(0.5, 0.5, -1.0);
+	
+	vec3 L = normalize( LightPosition - gl_Position.xyz );
+	vec3 E = normalize( -gl_Position.xyz );
+	vec3 H = normalize( L + E );
+
+	vec3 N = normalize( normal ).xyz;
+
+	vec3 ambient = vec3(0.5, 0.5, 0.5);
+
+	float Kd = max( dot(L, N), 0.0 );
+	vec3 diffuse = Kd * vec3(0.5, 0.5, 0.5);
+
+	float Ks = pow( max(dot(N, H), 0.0), 100.0 );
+	vec3 specular = Ks * vec3(0.5, 0.5, 0.5);
+	if( dot(L, N) < 0.0 ) specular = vec3(0.0, 0.0, 0.0);
+
+
+	if(flag1==1.0)								//Grid
+ 		FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+	else if(flag1==2.0)							//Box
+		FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+	else if(flag1==3.0)							//Not selected vertices
+		FragColor = vec4(0.0, 1.0, 0.0, 1.0);	
+	else if(flag1==3.5)							//Selected vertices
+		FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	else if(flag1==4.0)							//Background
+		FragColor = vec4((Position.z+1.0)/2.0, 1.0-(Position.z+1.0)/2.0, 0.0, 1.0);
+	else if(flag1==5.0)							//Output
+		FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	else if(flag1==6.0)							//Contour
+		FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	else if(flag1==7.0)							//Blue
+		FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+	else if(flag1==8.0)							//Red
+		FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+
+    FragColor = vec4(ambient + diffuse + specular, 1.0) * FragColor;
+
+}
